@@ -12,11 +12,15 @@ from config.settings import Settings, validate_config
 from domain.shared.error_codes import ErrorCodeRegistry
 from domain.shared.exceptions import DomainException
 from interfaces.api.v1.agent import router as agent_router
+from interfaces.api.v1.ai_invocation import router as ai_invocation_router
 from interfaces.api.v1.autonomous import router as autonomous_router
 from interfaces.api.v1.bible import router as bible_router
 from interfaces.api.v1.chapters import router as chapters_router
+from interfaces.api.v1.checkpoint import router as checkpoint_router
+from interfaces.api.v1.dag import router as dag_router
 from interfaces.api.v1.export import router as export_router
 from interfaces.api.v1.foreshadows import router as foreshadows_router
+from interfaces.api.v1.governance import router as governance_router
 from interfaces.api.v1.knowledge import router as knowledge_router
 from interfaces.api.v1.memory import router as memory_router
 from interfaces.api.v1.novels import router as novels_router
@@ -185,6 +189,11 @@ app.include_router(worldview_router)
 app.include_router(snapshots_router)
 app.include_router(export_router)
 app.include_router(search_router)
+# NexusForge 新增端点
+app.include_router(dag_router)
+app.include_router(governance_router)
+app.include_router(checkpoint_router)
+app.include_router(ai_invocation_router)
 
 frontend_dist = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "dist")
 if os.path.isdir(frontend_dist):
