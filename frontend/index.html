@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星渊笔</title>
+    <!-- B2 修复：CSS 加载前同步设置 data-theme，消除首屏主题闪白（FOUC） -->
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem('xy-theme') || localStorage.getItem('xy-settings');
+          var mode = 'abyss';
+          if (raw) {
+            var p = JSON.parse(raw);
+            var m = p && p.mode ? p.mode : (p && p.theme && p.theme.mode);
+            if (['light', 'dark', 'abyss', 'system'].indexOf(m) >= 0) mode = m;
+          }
+          if (mode === 'system') {
+            mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', mode);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

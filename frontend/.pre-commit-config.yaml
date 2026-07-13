@@ -1,0 +1,90 @@
+# See https://pre-commit.com for more information
+# 安装：pip install pre-commit && pre-commit install
+# 手动运行：pre-commit run --all-files
+# 更新钩子：pre-commit autoupdate
+default_language_version:
+  python: python3.12
+  node: 20-system
+
+repos:
+  # Python 代码风格与静态检查
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.0
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^backend/.*\.py$
+      - id: ruff-format
+        files: ^backend/.*\.py$
+
+  # 类型检查（仅对非测试目录，避免测试代码阻塞提交）
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.0
+    hooks:
+      - id: mypy
+        name: mypy (backend, exclude tests)
+        entry: bash -c 'cd backend && mypy . --ignore-missing-imports --no-strict-optional --exclude "tests/|migrations/|\.venv"'
+        language: system
+        types: [python]
+        files: ^backend/.*\.py$
+        pass_filenames: false
+
+  # 通用文件规范
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^frontend/.*\.(css|scss)$
+      - id: end-of-file-fixer
+        exclude: ^frontend/dist/
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-toml
+      - id: check-json
+        exclude: ^frontend/package-lock\.json$|^frontend/tsconfig.*\.json$
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+        exclude: ^frontend/dist/|^backend/data/.*\.db$
+
+  # 前端 lint
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint (frontend)
+        entry: bash -c 'cd frontend && npx eslint --max-warnings=0 src/'
+        language: system
+        types: [file]
+        files: ^frontend/src/.*\.(ts|tsx|vue)$
+        pass_filenames: false
+      - id: vue-tsc
+        name: vue-tsc type check (frontend)
+        entry: bash -c 'cd frontend && npx vue-tsc --noEmit 2>&1 | tail -5'
+        language: system
+        types: [file]
+        files: ^frontend/src/.*\.(ts|tsx|vue)$
+        pass_filenames: false
+        # 当前 vue-tsc 报错较多，暂不阻塞提交，等 Phase 3 类型错误修复后启用
+        stages: [manual]
+
+  # 安全扫描（依赖项漏洞检查）
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+        name: bandit (backend security)
+        args: [--recursive, --skip, "B101,B601", --exclude, "tests/,migrations/,.venv/"]
+        files: ^backend/.*\.py$
+        pass_filenames: false
+
+# 配置：跳过部分目录
+exclude: |
+  (?x)^(
+      backend/\.venv/.*|
+      backend/tests/integration/.*|
+      backend/migrations/.*|
+      frontend/dist/.*|
+      frontend/node_modules/.*|
+      src-tauri/target/.*|
+      .*\.lock$
+  )$

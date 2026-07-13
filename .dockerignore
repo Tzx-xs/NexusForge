@@ -1,0 +1,22 @@
+# L-05 修复：.dockerignore 防止敏感文件被打入镜像。
+# 旧实现未提供该文件，可能将 .env、data/、logs/ 等敏感内容随 COPY 进入镜像。
+# 安全实践：构建上下文必须显式排除敏感目录与本地状态文件。
+**/.env
+**/.env.*
+**/data/
+**/logs/
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.git/
+**/.gitignore
+**/node_modules/
+**/dist/**/*.map
+backend/nul
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/security_review_report.md

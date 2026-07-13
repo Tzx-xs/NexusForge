@@ -1,0 +1,58 @@
+# Virtual Environment
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# 环境变量文件（包含敏感信息）
+.env
+.env.local
+.env.*.local
+
+# 数据库
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+
+# 日志
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 前端
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
+# 前端运行时 API Key 配置（改为环境变量注入，禁止提交到版本控制）
+frontend/public/xy-config.json
+frontend/.env.local
+frontend/.env.*.local
+
+# 系统文件
+.DS_Store
+Thumbs.db

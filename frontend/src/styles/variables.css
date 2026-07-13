@@ -1,0 +1,916 @@
+/* ========================================
+   星渊笔 (Star Abyss Pen) Brand CSS
+   Abyss Theme — Editorial Dark-Literary
+   优化方向：深炭黑暖底 + 星渊紫品牌 + 琥珀金强调
+   ======================================== */
+
+:root,
+[data-theme='abyss'] {
+  color-scheme: dark;
+  /* === Brand Colors (Abyss — 降低饱和度，更沉稳) === */
+  --xy-brand-50: #181623;
+  --xy-brand-100: #1f1d2e;
+  --xy-brand-200: #29263d;
+  --xy-brand-300: #3a3652;
+  --xy-brand-400: #5a5480;
+  --xy-brand-500: #8b7ec8;
+  --xy-brand-600: #a99ee0;
+  --xy-brand-700: #c8c0f0;
+  --xy-brand-starlight: #d4cff8;
+  --xy-brand-glow: rgba(139, 126, 200, 0.12);
+  --xy-brand-glow-strong: rgba(139, 126, 200, 0.22);
+
+  /* === Accent Color: Amber Gold (唯一强调色) === */
+  --xy-accent: #d4a853;
+  --xy-accent-soft: rgba(212, 168, 83, 0.12);
+  --xy-accent-glow: rgba(212, 168, 83, 0.25);
+
+  /* === Semantic Colors === */
+  --xy-success: #5fd9a7;
+  --xy-success-bg: #112c22;
+  --xy-warning: #f0c24d;
+  --xy-warning-bg: #342a0f;
+  --xy-danger: #f28585;
+  --xy-danger-bg: #351414;
+  --xy-info: #8fa1f7;
+  --xy-info-bg: #1a1c2e;
+  --xy-purple: var(--xy-brand-500);
+  --xy-pink: var(--xy-accent);
+  --xy-gold: var(--xy-accent);
+
+  /* === Text Colors (暖调文字) === */
+  --xy-text-1: #f2f0e8;
+  --xy-text-2: #b7b3c4;
+  --xy-text-3: #7c778a;
+  --xy-text-4: #504c5c;
+  --xy-text-inverse: #0c0b10;
+  --xy-text-editor: #e3e0d6;
+  --xy-text-link: var(--xy-brand-600);
+
+  /* === Surface / Background (深炭黑暖底) === */
+  --xy-bg-page: #0c0b10;
+  --xy-bg-canvas: #111016;
+  --xy-editor-paper: #13121a;
+  --xy-surface-1: #17161f;
+  --xy-surface-2: #1e1d27;
+  --xy-surface-3: #252431;
+  --xy-surface-hover: #232230;
+  --xy-surface-active: #2c2a3a;
+  --xy-surface-glass: rgba(17, 16, 22, 0.78);
+  --xy-overlay: rgba(0, 0, 0, 0.72);
+
+  /* === Border / Divider (低存在感，hover/focus 才显现) === */
+  --xy-border-1: rgba(242, 240, 232, 0.06);
+  --xy-border-2: rgba(242, 240, 232, 0.12);
+  --xy-border-focus: var(--xy-brand-600);
+  --xy-border-error: var(--xy-danger);
+  --xy-divider: rgba(242, 240, 232, 0.04);
+  --xy-split-border: rgba(242, 240, 232, 0.06);
+  --xy-editor-line: rgba(242, 240, 232, 0.05);
+
+  /* === Shadows (更克制的暗色投影) === */
+  --xy-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --xy-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --xy-shadow-md: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --xy-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
+  --xy-shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(242, 240, 232, 0.08);
+  --xy-shadow-focus-ring: 0 0 0 3px rgba(139, 126, 200, 0.22);
+  --xy-shadow-glow: 0 0 20px rgba(139, 126, 200, 0.1);
+  --xy-shadow-glow-strong: 0 0 32px rgba(139, 126, 200, 0.16);
+
+  /* === Topbar Gradient (Abyss) === */
+  --xy-topbar-gradient: linear-gradient(135deg, #0c0b10 0%, #14131c 60%, #17161f 100%);
+
+  /* === Selection & Caret === */
+  --xy-selection: rgba(149, 133, 212, 0.28);
+  --xy-caret: #c4b5fd;
+  --xy-caret-width: 2px;
+  --xy-active-line: rgba(149, 133, 212, 0.08);
+
+  /* === DAG Canvas (Abyss) === */
+  --xy-dag-bg: #0d0b1a;
+  --xy-dag-grid: rgba(124, 108, 191, 0.08);
+  --xy-dag-node: #141127;
+  --xy-dag-edge: #3b2f7a;
+  --xy-dag-edge-active: var(--xy-brand-500);
+  --xy-dag-port-text: var(--xy-brand-600);
+  --xy-dag-port-json: var(--xy-purple);
+  --xy-dag-port-score: var(--xy-warning);
+  --xy-dag-port-boolean: var(--xy-success);
+  --xy-dag-port-list: var(--xy-gold);
+
+  /* === Font Stacks (Editorial: 衬线显示 + 人文无衬线正文) === */
+  --xy-font-sans:
+    'SF Pro Text', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Source Han Sans SC', system-ui, -apple-system, sans-serif;
+  --xy-font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'STSong', Georgia, serif;
+  --xy-font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+  --xy-font-display: 'Cormorant Garamond', 'Noto Serif SC', 'Source Han Serif SC', Georgia, serif;
+
+  /* === Font Sizes (rem, base=16px) === */
+  --xy-fs-xs: 0.6875rem;
+  --xy-fs-sm: 0.75rem;
+  --xy-fs-base: 0.8125rem;
+  --xy-fs-md: 0.875rem;
+  --xy-fs-lg: 1rem;
+  --xy-fs-xl: 1.125rem;
+  --xy-fs-2xl: 1.375rem;
+  --xy-fs-3xl: 1.75rem;
+  --xy-fs-4xl: 2.5rem;
+  --xy-fs-editor: 1rem;
+  --xy-fs-editor-lg: 1.125rem;
+
+  /* === Font Weights === */
+  --xy-fw-reg: 400;
+  --xy-fw-med: 500;
+  --xy-fw-sb: 600;
+  --xy-fw-bold: 700;
+
+  /* === Line Heights === */
+  --xy-lh-tight: 1.25;
+  --xy-lh-snug: 1.4;
+  --xy-lh-normal: 1.6;
+  --xy-lh-relaxed: 1.8;
+  --xy-lh-editor: 1.95;
+  --xy-lh-display: 1.1;
+  --xy-lh-mono: 1.5;
+
+  /* === Letter Spacing === */
+  --xy-tracking-tight: -0.02em;
+  --xy-tracking-normal: 0;
+  --xy-tracking-wide: 0.05em;
+  --xy-tracking-wider: 0.08em;
+
+  /* === Spacing Scale === */
+  --xy-space-0: 0;
+  --xy-space-px: 1px;
+  --xy-space-0-5: 2px;
+  --xy-space-1: 4px;
+  --xy-space-2: 8px;
+  --xy-space-3: 12px;
+  --xy-space-4: 16px;
+  --xy-space-5: 20px;
+  --xy-space-6: 24px;
+  --xy-space-8: 32px;
+  --xy-space-10: 40px;
+  --xy-space-12: 48px;
+  --xy-space-16: 64px;
+  --xy-space-20: 80px;
+
+  /* === Layout Constants === */
+  --xy-topbar-h: 52px;
+  --xy-sidebar-w: 280px;
+  --xy-sidebar-collapsed: 52px;
+  --xy-chapterrail-w: min(320px, 22vw);
+  --xy-rightpanel-w: min(340px, 24vw);
+  --xy-editor-max-w: 760px;
+  --xy-statusbar-h: 28px;
+  --xy-toolbar-h: 48px;
+  --xy-panel-header-h: 44px;
+
+  /* === Border Radius === */
+  --xy-radius-none: 0;
+  --xy-radius-xs: 3px;
+  --xy-radius-sm: 5px;
+  --xy-radius-md: 8px;
+  --xy-radius-lg: 10px;
+  --xy-radius-xl: 14px;
+  --xy-radius-2xl: 20px;
+  --xy-radius-3xl: 28px;
+  --xy-radius-full: 9999px;
+
+  /* === Border Width === */
+  --xy-border-w-1: 1px;
+  --xy-border-w-2: 2px;
+
+  /* === Z-Index === */
+  --xy-z-base: 0;
+  --xy-z-split-bar: 10;
+  --xy-z-sticky: 20;
+  --xy-z-nav-fixed: 30;
+  --xy-z-dropdown: 100;
+  --xy-z-tooltip: 200;
+  --xy-z-drawer-backdrop: 300;
+  --xy-z-drawer: 310;
+  --xy-z-modal-backdrop: 400;
+  --xy-z-modal: 410;
+  --xy-z-popover: 500;
+  --xy-z-toast: 600;
+  --xy-z-command: 700;
+  --xy-z-loading: 800;
+
+  /* === Scrollbar (theme-driven) === */
+  --xy-scrollbar-thumb: rgba(124, 108, 191, 0.2);
+  --xy-scrollbar-thumb-hover: rgba(124, 108, 191, 0.35);
+
+  /* === Easing === */
+  --xy-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --xy-ease-enter: cubic-bezier(0, 0, 0.2, 1);
+  --xy-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --xy-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* === Durations === */
+  --xy-dur-xs: 80ms;
+  --xy-dur-sm: 150ms;
+  --xy-dur-md: 220ms;
+  --xy-dur-lg: 320ms;
+  --xy-dur-xl: 500ms;
+  --xy-dur-toast: 3000ms;
+  --xy-dur-stagger: 80ms;
+  --xy-dur-shimmer: 1500ms;
+  --xy-dur-pulse: 2000ms;
+
+  /* === Responsive Breakpoints === */
+  --xy-bp-mobile: 768px;
+  --xy-bp-tablet: 1280px;
+}
+
+/* ========================================
+   Light Theme Override
+   通过 <html data-theme="light"> 触发
+   色值来源：前端UI设计计划书.md §2.1
+   Light 主题增强：彩色渐变流光文字 + 灵动背景光效
+   ======================================== */
+[data-theme='light'] {
+  color-scheme: light;
+  /* === Brand Colors === */
+  --xy-brand-50: #eef2ff;
+  --xy-brand-100: #e0e7ff;
+  --xy-brand-200: #c7d2fe;
+  --xy-brand-300: #a5b4fc;
+  --xy-brand-400: #818cf8;
+  --xy-brand-500: #6366f1;
+  --xy-brand-600: #4f46e5;
+  --xy-brand-700: #4338ca;
+  --xy-brand-starlight: #6366f1;
+  --xy-brand-glow-light: linear-gradient(135deg, #6366f1, #a78bfa, #ec4899, #6366f1);
+  --xy-brand-shimmer: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(99, 102, 241, 0.08) 25%,
+    rgba(167, 139, 250, 0.12) 50%,
+    rgba(236, 72, 153, 0.08) 75%,
+    transparent 100%
+  );
+
+  /* === Semantic Colors === */
+  --xy-success: #10b981;
+  --xy-success-bg: #ecfdf5;
+  --xy-warning: #f59e0b;
+  --xy-warning-bg: #fffbeb;
+  --xy-danger: #ef4444;
+  --xy-danger-bg: #fef2f2;
+  --xy-info: #3b82f6;
+  --xy-info-bg: #eff6ff;
+  --xy-purple: #8b5cf6;
+  --xy-pink: #ec4899;
+
+  /* === Text Colors === */
+  --xy-text-1: #0f172a;
+  --xy-text-2: #334155;
+  --xy-text-3: #64748b;
+  --xy-text-4: #94a3b8;
+  --xy-text-inverse: #ffffff;
+  --xy-text-editor: #1a1a2e;
+  --xy-text-link: var(--xy-brand-600);
+
+  /* === Surface / Background === */
+  --xy-bg-page: #f5f6fa;
+  --xy-bg-canvas: #fbfbfe;
+  --xy-editor-paper: #fafaf7;
+  --xy-surface-1: #ffffff;
+  --xy-surface-2: #ffffff;
+  --xy-surface-3: #f1f3f9;
+  --xy-surface-hover: #f8f9fd;
+  --xy-surface-active: #eef1fa;
+  --xy-surface-glass: rgba(255, 255, 255, 0.88);
+  --xy-overlay: rgba(15, 23, 42, 0.5);
+
+  /* === Border / Divider === */
+  --xy-border-1: rgba(15, 23, 42, 0.08);
+  --xy-border-2: rgba(15, 23, 42, 0.14);
+  --xy-border-focus: #6366f1;
+  --xy-border-error: #ef4444;
+  --xy-divider: rgba(15, 23, 42, 0.06);
+  --xy-split-border: rgba(15, 23, 42, 0.07);
+  --xy-editor-line: rgba(15, 23, 42, 0.06);
+
+  /* === Shadow === */
+  --xy-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --xy-shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.05);
+  --xy-shadow-md: 0 6px 20px rgba(15, 23, 42, 0.07);
+  --xy-shadow-lg: 0 12px 40px rgba(15, 23, 42, 0.1);
+  --xy-shadow-modal: 0 24px 80px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
+  --xy-shadow-focus-ring: 0 0 0 3px rgba(99, 102, 241, 0.2);
+
+  /* === DAG Canvas === */
+  --xy-dag-bg: #f5f6fa;
+  --xy-dag-grid: rgba(15, 23, 42, 0.08);
+  --xy-dag-node: #ffffff;
+  --xy-dag-edge: #cbd5e1;
+  --xy-dag-edge-active: var(--xy-brand-500);
+  --xy-dag-port-text: #3b82f6;
+  --xy-dag-port-json: #8b5cf6;
+  --xy-dag-port-score: #f59e0b;
+  --xy-dag-port-boolean: #22c55e;
+  --xy-dag-port-list: #ec4899;
+
+  /* === Selection / Caret === */
+  --xy-selection: rgba(99, 102, 241, 0.18);
+  --xy-caret: #4f46e5;
+  --xy-caret-width: 2px;
+  --xy-active-line: rgba(99, 102, 241, 0.05);
+
+  /* === Brand Glow & Shadows (light adapt) === */
+  --xy-brand-glow: rgba(139, 92, 246, 0.1);
+  --xy-brand-glow-strong: rgba(139, 92, 246, 0.2);
+  --xy-topbar-gradient: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  --xy-shadow-glow: 0 0 15px rgba(139, 92, 246, 0.08);
+  --xy-shadow-glow-strong: 0 0 25px rgba(139, 92, 246, 0.15);
+
+  /* === Scrollbar (light) === */
+  --xy-scrollbar-thumb: rgba(15, 23, 42, 0.15);
+  --xy-scrollbar-thumb-hover: rgba(15, 23, 42, 0.25);
+}
+
+/* ========================================
+   Dark Theme — 继承 Abyss 色板
+   初代设计稿本身即为暗色 "Abyss" 主题，
+   故 dark 模式直接使用 :root 中的 Abyss 色值，
+   不再做靛蓝覆盖，保持品牌视觉一致性。
+   ======================================== */
+[data-theme='dark'] {
+  /* 显式继承，无覆盖 */
+}
+
+/* Abyss 模式与 dark 等效，均使用 :root Abyss 色板 */
+[data-theme='abyss'] {
+  /* 显式继承，无覆盖 */
+}
+
+/* === Typography Classes === */
+.xy-font-sans {
+  font-family: var(--xy-font-sans);
+}
+.xy-font-serif {
+  font-family: var(--xy-font-serif);
+}
+.xy-font-mono {
+  font-family: var(--xy-font-mono);
+}
+.xy-font-display {
+  font-family: var(--xy-font-display);
+}
+
+.xy-fs-xs {
+  font-size: var(--xy-fs-xs);
+}
+.xy-fs-sm {
+  font-size: var(--xy-fs-sm);
+}
+.xy-fs-base {
+  font-size: var(--xy-fs-base);
+}
+.xy-fs-md {
+  font-size: var(--xy-fs-md);
+}
+.xy-fs-lg {
+  font-size: var(--xy-fs-lg);
+}
+.xy-fs-xl {
+  font-size: var(--xy-fs-xl);
+}
+.xy-fs-2xl {
+  font-size: var(--xy-fs-2xl);
+}
+.xy-fs-3xl {
+  font-size: var(--xy-fs-3xl);
+}
+.xy-fs-4xl {
+  font-size: var(--xy-fs-4xl);
+}
+.xy-fs-editor {
+  font-size: var(--xy-fs-editor);
+}
+
+/* === Keyframes === */
+@keyframes xy-pulse-dot {
+  0% {
+    box-shadow: 0 0 0 0 rgba(149, 133, 212, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes xy-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes xy-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes xy-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* === Noise texture overlay (Abyss theme) === */
+.xy-noise-overlay::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: var(--xy-z-loading);
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Star twinkle animation */
+@keyframes xy-star-twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes xy-star-drift {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(2px, -3px);
+  }
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--xy-scrollbar-thumb);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--xy-scrollbar-thumb-hover);
+}
+
+/* ========================================
+   Theme Transition & Light Theme Overrides
+   ======================================== */
+
+/* 主题切换时平滑过渡 background / color */
+html {
+  transition: color 0ms, background-color 0ms;
+}
+body {
+  transition: background-color var(--xy-dur-sm) var(--xy-ease-standard),
+              color var(--xy-dur-sm) var(--xy-ease-standard);
+}
+
+/* Light 主题隐藏噪声纹理 */
+[data-theme='light'] .xy-noise-overlay::before {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 平滑主题切换：切换瞬间添加遮罩防止闪烁 */
+.theme-switching::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: var(--xy-z-loading);
+  background: var(--xy-bg-page);
+  opacity: 0.5;
+  pointer-events: none;
+  animation: xy-theme-fade-out var(--xy-dur-md) var(--xy-ease-standard) forwards;
+}
+
+@keyframes xy-theme-fade-out {
+  from { opacity: 0.5; }
+  to   { opacity: 0; }
+}
+
+/* ========================================
+   Light 主题增强：彩色渐变流光效果
+   使用 animated gradient 让文字和背景带有流动色彩
+   ======================================== */
+
+/* 渐变流光文字（适用于标题、品牌名） */
+.xy-text-gradient {
+  background: linear-gradient(
+    135deg,
+    #6366f1 0%,
+    #a78bfa 25%,
+    #ec4899 50%,
+    #a78bfa 75%,
+    #6366f1 100%
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: xy-gradient-shift 4s ease-in-out infinite;
+}
+
+[data-theme='light'] .hero-title {
+  background: linear-gradient(
+    135deg,
+    #4f46e5 0%,
+    #8b5cf6 30%,
+    #ec4899 60%,
+    #6366f1 100%
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: xy-gradient-shift 5s ease-in-out infinite;
+  text-shadow: none;
+}
+
+[data-theme='light'] .hero-subtitle {
+  color: rgba(79, 70, 229, 0.7);
+}
+
+/* 品牌名渐变 */
+[data-theme='light'] .brand-text {
+  background: linear-gradient(135deg, #6366f1, #a78bfa);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: xy-gradient-shift 3s ease-in-out infinite;
+}
+
+/* 渐变背景流动（侧边栏、卡片） */
+@keyframes xy-gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes xy-shimmer-light {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 按钮磁吸效果（Light 主题增强） */
+[data-theme='light'] .btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background-size: 200% 200%;
+  animation: xy-gradient-shift 4s ease-in-out infinite;
+}
+
+[data-theme='light'] .btn-primary:hover {
+  filter: brightness(1.1) saturate(1.2);
+}
+
+/* Light 主题导航激活项 */
+[data-theme='light'] .nav-item-active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(167, 139, 250, 0.08));
+  border-left: 3px solid transparent;
+  border-image: linear-gradient(180deg, #6366f1, #a78bfa) 1;
+}
+
+/* Light 主题配置卡片hover */
+[data-theme='light'] .create-card {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme='light'] .create-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(99, 102, 241, 0.04) 25%,
+    rgba(167, 139, 250, 0.06) 50%,
+    rgba(236, 72, 153, 0.04) 75%,
+    transparent 100%
+  );
+  pointer-events: none;
+  animation: xy-shimmer-light 6s ease-in-out infinite;
+}
+
+/* Light 主题 quick-link 卡片 accent 效果增强 */
+[data-theme='light'] .quick-link-card-accent {
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.08),
+    rgba(167, 139, 250, 0.05),
+    rgba(236, 72, 153, 0.04)
+  );
+  background-size: 200% 200%;
+  animation: xy-gradient-shift 6s ease-in-out infinite;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+/* Light 主题统计数字 */
+[data-theme='light'] .stat-value {
+  background: linear-gradient(135deg, #6366f1, #a78bfa);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: xy-gradient-shift 4s ease-in-out infinite;
+}
+
+/* Light 主题进度环 */
+[data-theme='light'] .progress-fill {
+  background: linear-gradient(90deg, #6366f1, #a78bfa, #ec4899);
+  background-size: 200% 100%;
+  animation: xy-gradient-shift 3s ease-in-out infinite;
+}
+
+[data-theme='light'] .progress-ring-fg {
+  stroke: url(#light-gradient) !important;
+}
+
+/* ========================================
+   Abyss 主题全局流光增强
+   暗紫流光背景 + 淡藕紫透明文字
+   ======================================== */
+
+/* 页面背景：单一柔光，极克制 */
+[data-theme='abyss'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 1200px 900px at 20% 0%, rgba(139, 126, 200, 0.05), transparent 60%),
+    radial-gradient(ellipse 900px 700px at 100% 100%, rgba(212, 168, 83, 0.03), transparent 55%);
+  background-size: 200% 200%, 200% 200%;
+  animation: xy-bg-drift 35s ease-in-out infinite;
+}
+
+@keyframes xy-bg-drift {
+  0%, 100% { background-position: 0% 0%, 100% 100%; }
+  50%      { background-position: 30% 20%, 85% 90%; }
+}
+
+@keyframes xy-text-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+@keyframes xy-border-flow {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+@keyframes xy-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 108, 191, 0.25); }
+  50%      { box-shadow: 0 0 20px 4px rgba(124, 108, 191, 0.1); }
+}
+
+@keyframes xy-msg-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes xy-avatar-ring-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50%      { transform: scale(1.15); opacity: 0.2; }
+}
+
+@keyframes xy-ring-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50%      { transform: scale(1.08); opacity: 0.2; }
+}
+
+/* 页面级标题：仅品牌名与模块标题保留微 shimmer，其余用纯色 */
+[data-theme='abyss'] .brand-text,
+[data-theme='abyss'] .module-title {
+  background: linear-gradient(135deg, #f2f0e8 0%, var(--xy-brand-starlight) 50%, #a99ee0 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: xy-text-shimmer 8s ease-in-out infinite;
+}
+
+[data-theme='abyss'] .panel-title,
+[data-theme='abyss'] .page-title,
+[data-theme='abyss'] .section-title,
+[data-theme='abyss'] .hero-title,
+[data-theme='abyss'] .stat-value {
+  color: var(--xy-text-1);
+}
+
+/* 统计数字特殊强调：琥珀金 */
+[data-theme='abyss'] .stat-value {
+  color: var(--xy-accent);
+}
+
+/* 卡片顶部边线：静态微光，不循环流动 */
+[data-theme='abyss'] .card,
+[data-theme='abyss'] .book-card,
+[data-theme='abyss'] .stat-card,
+[data-theme='abyss'] .panel-card,
+[data-theme='abyss'] .form-card {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme='abyss'] .card::before,
+[data-theme='abyss'] .book-card::before,
+[data-theme='abyss'] .stat-card::before,
+[data-theme='abyss'] .panel-card::before,
+[data-theme='abyss'] .form-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 168, 83, 0.12), rgba(139, 126, 200, 0.1), transparent);
+  pointer-events: none;
+}
+
+/* 主按钮：琥珀金渐变，静态 */
+[data-theme='abyss'] .btn-primary,
+[data-theme='abyss'] button[type="submit"].btn-primary {
+  background: linear-gradient(135deg, #c99a42, #d4a853 50%, #e0bd6e);
+  color: var(--xy-text-inverse);
+}
+
+[data-theme='abyss'] .btn-primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 4px 16px rgba(212, 168, 83, 0.25);
+}
+
+/* 输入框 focus：克制紫光环 */
+[data-theme='abyss'] .form-input:focus,
+[data-theme='abyss'] input:focus,
+[data-theme='abyss'] textarea:focus,
+[data-theme='abyss'] select:focus {
+  border-color: var(--xy-border-focus);
+  box-shadow: 0 0 0 2px rgba(139, 126, 200, 0.15);
+}
+
+/* 进度条：琥珀金静态渐变 */
+[data-theme='abyss'] .progress-fill {
+  background: linear-gradient(90deg, #c99a42, #d4a853 60%, #e0bd6e);
+}
+
+/* AI 气泡：去掉多余外发光 */
+[data-theme='abyss'] .chat-bubble-ai {
+  box-shadow: none;
+}
+
+[data-theme='abyss'] .ai-avatar,
+[data-theme='abyss'] .avatar.ai {
+  animation: none;
+}
+
+/* 标签选中态：琥珀金边框 + 微背景 */
+[data-theme='abyss'] .tag.selected {
+  background: var(--xy-accent-soft);
+  border-color: var(--xy-accent);
+  color: var(--xy-accent);
+}
+
+/* 导航激活项：左侧琥珀金 2px 线 */
+[data-theme='abyss'] .nav-item.active {
+  background: var(--xy-surface-active);
+  border-left: 2px solid var(--xy-accent);
+}
+
+/* 顶部栏：纯色 + 底部细线 */
+[data-theme='abyss'] .topbar {
+  background: var(--xy-bg-canvas);
+  border-bottom: 1px solid var(--xy-border-1);
+}
+
+/* 模块切换淡入 */
+.module-fade-enter-active,
+.module-fade-leave-active {
+  transition: all 220ms var(--xy-ease-standard);
+}
+
+.module-fade-enter-from,
+.module-fade-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+/* ========================================
+   Utility classes
+   ======================================== */
+
+/* 淡藕紫透明流光文字 */
+.xy-text-gradient {
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme='abyss'] .xy-text-gradient {
+  background-image: linear-gradient(135deg, #e8e4f3 0%, #c4b5fd 35%, #9585d4 65%, #e8e4f3 100%);
+  animation: xy-text-shimmer 6s ease-in-out infinite;
+}
+
+/* 卡片顶部流光边线 */
+.xy-card-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.xy-card-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 168, 83, 0.1), rgba(139, 126, 200, 0.08), transparent);
+  pointer-events: none;
+}
+
+/* 暗紫流光背景 */
+.xy-bg-flow {
+  position: relative;
+}
+
+.xy-bg-flow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 900px 700px at 25% 20%, rgba(99, 102, 241, 0.07), transparent 70%),
+    radial-gradient(ellipse 700px 900px at 85% 85%, rgba(167, 139, 250, 0.05), transparent 70%),
+    radial-gradient(ellipse 600px 600px at 65% 35%, rgba(236, 72, 153, 0.03), transparent 70%);
+  background-size: 200% 200%, 200% 200%, 200% 200%;
+  animation: xy-bg-drift 25s ease-in-out infinite;
+}
+
+/* focus/hover 紫色外发光 */
+.xy-glow-border:focus-within,
+.xy-glow-border:focus {
+  border-color: var(--xy-border-focus);
+  box-shadow: 0 0 0 3px rgba(149, 133, 212, 0.18), 0 0 18px rgba(149, 133, 212, 0.08);
+}
+
+/* 持续微光脉冲 */
+.xy-glow-pulse {
+  animation: xy-glow-pulse-anim 3s ease-in-out infinite;
+}
+
+@keyframes xy-glow-pulse-anim {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 108, 191, 0.25); }
+  50% { box-shadow: 0 0 20px 4px rgba(124, 108, 191, 0.1); }
+}
+
+/* 网格纹理背景 */
+.xy-grid-texture {
+  background-image:
+    linear-gradient(rgba(124, 108, 191, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 108, 191, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}

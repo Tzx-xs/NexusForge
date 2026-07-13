@@ -1,0 +1,100 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xingyuanbi-backend"
+version = "0.1.0"
+description = "星渊笔 - AI 辅助长篇小说写作系统后端"
+requires-python = ">=3.12"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["application*", "config*", "domain*", "engine*", "infrastructure*", "interfaces*"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+exclude = [
+    ".venv",
+    "__pycache__",
+    "*.pyc",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "logs",
+    "data",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # Pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "W",   # pycodestyle warnings
+]
+ignore = [
+    "E501",  # line-too-long (handled by formatter)
+    "B008",  # do-not-call-async-in-sync (FastAPI Depends common pattern)
+    "SIM108", # use-ternary-operator (sometimes less readable)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = ["domain", "application", "infrastructure", "interfaces", "config", "engine"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+ignore_missing_imports = true
+show_error_codes = true
+explicit_package_bases = true
+implicit_optional = true
+warn_no_return = false
+exclude = [
+    "\\.venv",
+    "tests",
+]
+
+# 渐进式严格模式迁移：核心域（domain）已通过严格检查；
+# 下列模块含历史未注解函数，临时降级为宽松模式，待后续逐模块修复后移除。
+[[tool.mypy.overrides]]
+module = [
+    "application.*",
+    "interfaces.*",
+    "agents.*",
+    "engine.*",
+    "infrastructure.ai.llm_client",
+    "infrastructure.ai.provider_factory",
+    "infrastructure.ai.embedding_service",
+    "infrastructure.ai.chromadb_vector_store",
+    "infrastructure.ai.providers.*",
+    "infrastructure.persistence.storyline_repo",
+    "infrastructure.persistence.conversation_repo",
+    "infrastructure.tools.*",
+]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"

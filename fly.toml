@@ -1,0 +1,29 @@
+# Fly.io 配置 — 星渊笔后端
+app = "xingyuanbi"
+primary_region = "nrt"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  APP_ENV = "production"
+  DATABASE_URL = "sqlite:////data/xingyuanbi.db"
+  CORS_ORIGINS = "https://xingyuanbi.pages.dev"
+
+[[mounts]]
+  source = "xingyuanbi_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "3s"
+  grace_period = "10s"
+  method = "GET"
+  path = "/health"

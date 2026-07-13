@@ -1,0 +1,28 @@
+{
+  "name": "xingyuanbi",
+  "version": "0.1.0",
+  "runtime": "python",
+  "runtime_version": "3.12",
+  "entrypoint": "interfaces.main:app",
+  "build": {
+    "commands": [
+      "cd backend && python -m pip install -r requirements.txt"
+    ],
+    "output": "backend"
+  },
+  "static_assets": {
+    "directory": "frontend/dist",
+    "mount_path": "/"
+  },
+  "env": {
+    "PYTHONPATH": "backend",
+    "APP_ENV": "production",
+    "API_KEY": "${API_KEY}",
+    "ENCRYPTION_KEY": "${ENCRYPTION_KEY}",
+    "PORT": "8000",
+    "CHROMA_HOST": "${CHROMA_HOST}",
+    "CHROMA_PORT": "${CHROMA_PORT}"
+  },
+  "health_check": "/health",
+  "port": 8000
+}
