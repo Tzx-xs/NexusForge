@@ -61,21 +61,24 @@ jobs:
           VITE_ENABLE_TIPTAP_EDITOR: 'true'
 
       # ─── 5. PyInstaller 打包后端 ─────────────────────────────
+      # 修复：--add-data 路径相对于 --specpath 解析，而非 working-directory
+      # 因此用 $GITHUB_WORKSPACE 构造绝对路径，避免 "Unable to find ... config" 错误
       - name: Package backend with PyInstaller
         working-directory: backend
         run: |
+          $BE = "$env:GITHUB_WORKSPACE\backend"
           python -m PyInstaller `
             --name nexusforge-backend `
             --onedir `
             --distpath ../out/tauri `
             --workpath ../out/tauri/build `
             --specpath ../out/tauri `
-            --add-data "config;config" `
-            --add-data "migrations;migrations" `
-            --add-data "infrastructure/ai/prompt_packages;infrastructure/ai/prompt_packages" `
-            --add-data "infrastructure/persistence/schema.sql;infrastructure/persistence" `
-            --add-data "alembic.ini;." `
-            --add-data "alembic;alembic" `
+            --add-data "$BE\config;config" `
+            --add-data "$BE\migrations;migrations" `
+            --add-data "$BE\infrastructure\ai\prompt_packages;infrastructure/ai/prompt_packages" `
+            --add-data "$BE\infrastructure\persistence\schema.sql;infrastructure/persistence" `
+            --add-data "$BE\alembic.ini;." `
+            --add-data "$BE\alembic;alembic" `
             --hidden-import uvicorn.logging `
             --hidden-import uvicorn.protocols `
             --hidden-import uvicorn.protocols.http `
