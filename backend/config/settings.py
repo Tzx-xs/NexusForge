@@ -57,6 +57,23 @@ def _get_env_bool(key: str, default: bool) -> bool:
     return val in ("true", "1", "yes", "on")
 
 
+def _resolve_prod_data_dir() -> str | None:
+    """解析 Tauri 桌面端注入的生产数据目录。
+
+    优先级：NEXUSFORGE_PROD_DATA_DIR > PLOTPILOT_PROD_DATA_DIR > AITEXT_PROD_DATA_DIR
+    目录不存在时自动创建。
+    """
+    for env_key in ("NEXUSFORGE_PROD_DATA_DIR", "PLOTPILOT_PROD_DATA_DIR", "AITEXT_PROD_DATA_DIR"):
+        val = os.getenv(env_key, "").strip()
+        if val:
+            try:
+                os.makedirs(val, exist_ok=True)
+                return val
+            except OSError:
+                continue
+    return None
+
+
 class Settings:
     app_env: str
     app_host: str
@@ -95,7 +112,15 @@ class Settings:
         self.app_port = _get_env_int("APP_PORT", DEFAULT_APP_PORT)
         self.debug = _get_env_bool("DEBUG", DEFAULT_DEBUG)
 
-        self.database_url = _get_env("DATABASE_URL", DEFAULT_DATABASE_URL)
+        prod_data_dir = _resolve_prod_data_dir()
+
+        db_url = _get_env("DATABASE_URL", DEFAULT_DATABASE_URL)
+        if prod_data_dir and db_url.startswith("sqlite:///./"):
+            db_path = db_url[len("sqlite:///./"):]
+            self.database_url = f"sqlite:///{os.path.join(prod_data_dir, db_path)}"
+            os.makedirs(os.path.dirname(os.path.join(prod_data_dir, db_path)), exist_ok=True)
+        else:
+            self.database_url = db_url
 
         self.llm_provider = _get_env("LLM_PROVIDER", DEFAULT_LLM_PROVIDER)
         self.api_key = _get_env("LLM_API_KEY", "")
@@ -116,7 +141,12 @@ class Settings:
         self.sqlite_busy_timeout = _get_env_int("SQLITE_BUSY_TIMEOUT", SQLITE_BUSY_TIMEOUT)
 
         self.log_level = _get_env("LOG_LEVEL", DEFAULT_LOG_LEVEL)
-        self.log_file = _get_env("LOG_FILE", DEFAULT_LOG_FILE)
+        log_file = _get_env("LOG_FILE", DEFAULT_LOG_FILE)
+        if prod_data_dir and log_file.startswith("./"):
+            self.log_file = os.path.join(prod_data_dir, log_file[2:])
+            os.makedirs(os.path.dirname(self.log_file), exist_ok=True)
+        else:
+            self.log_file = log_file
 
         cors_raw = _get_env("CORS_ORIGINS", "")
         if cors_raw:
