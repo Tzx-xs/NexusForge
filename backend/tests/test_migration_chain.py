@@ -19,8 +19,8 @@ def test_migrations_directory_exists():
 
 
 def test_migration_files_present():
-    # 当前包含 001-007 共 7 个迁移文件（007 修复 FTS5 触发器兼容性）
-    assert len(MIGRATION_FILES) == 7, f"期望7个迁移文件，实际{len(MIGRATION_FILES)}: {MIGRATION_FILES}"
+    # 001-007 原有 + 008-011 新增（DAG/governance/checkpoint/ai_invocation）
+    assert len(MIGRATION_FILES) == 11, f"期望11个迁移文件，实际{len(MIGRATION_FILES)}: {MIGRATION_FILES}"
 
 
 def test_001_initial_schema_syntax():
