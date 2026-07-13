@@ -1,7 +1,7 @@
 <template>
   <section class="about-brand">
     <div class="brand-panel">
-      <div class="brand-mark" aria-hidden="true">墨</div>
+      <div class="brand-mark" aria-hidden="true">星</div>
       <div class="brand-main">
         <div class="brand-kicker">{{ BRAND.descriptor }}</div>
         <h2 class="brand-title">{{ BRAND.displayName }}</h2>
@@ -18,19 +18,6 @@
         <span class="info-label">开发团队</span>
         <span class="info-value">{{ BRAND.team }}</span>
       </div>
-      <div class="info-item">
-        <span class="info-label">直播时间</span>
-        <span class="info-value">{{ BRAND.liveSchedule }}</span>
-      </div>
-      <a
-        class="info-item info-item--link"
-        :href="BRAND.douyinUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <span class="info-label">抖音</span>
-        <span class="info-value">{{ BRAND.douyinLabel }}</span>
-      </a>
     </div>
   </section>
 </template>
