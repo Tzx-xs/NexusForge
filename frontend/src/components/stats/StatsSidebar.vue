@@ -5,8 +5,8 @@
       <div class="brand-logo">
         <span class="logo-icon">✦</span>
         <div class="brand-text">
-          <h1 class="brand-name">PlotPilot</h1>
-          <p class="brand-slogan">墨枢 · 作者的领航员</p>
+          <h1 class="brand-name">NexusForge</h1>
+          <p class="brand-slogan">星枢 · 作者的领航员</p>
         </div>
       </div>
       <button

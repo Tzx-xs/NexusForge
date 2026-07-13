@@ -24,7 +24,7 @@
             </template>
           </n-button>
           <div class="header-content">
-            <h1 class="title">墨枢 · 长篇叙事工作台</h1>
+            <h1 class="title">星枢 · 长篇叙事工作台</h1>
             <p class="subtitle">
               以梗概与类型开局，选定目标篇幅；宏观结构、幕次与节拍由后台自动编排，你专注把故事写下去即可。
             </p>
@@ -286,14 +286,10 @@
 
         <!-- 底部版权 -->
         <footer class="home-footer">
-          <span class="footer-brand">PlotPilot</span>
+          <span class="footer-brand">NexusForge</span>
           <span class="footer-sep">·</span>
-          <span class="footer-sub">墨枢</span>
-          <span class="footer-text">由 PlotPilot（墨枢）团队倾力开发</span>
-          <a class="footer-link" href="https://www.douyin.com/user/MS4wLjABAAAA91472902104" target="_blank" rel="noopener noreferrer">
-            抖音：林亦 91472902104
-          </a>
-          <span class="footer-text">每晚 9 点随缘直播</span>
+          <span class="footer-sub">星枢</span>
+          <span class="footer-text">由 NexusForge（星枢）团队倾力开发</span>
         </footer>
       </div>
     </div>

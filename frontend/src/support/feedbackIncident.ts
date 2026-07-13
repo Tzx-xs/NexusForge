@@ -166,11 +166,11 @@ export function buildDiagnosticBundle(
   backendAppendix?: BackendFeedbackAppendix | null,
 ) {
   return {
-    kind: 'plotpilot_frontend_diagnostic_bundle',
+    kind: 'nexusforge_frontend_diagnostic_bundle',
     bundle_version: 2,
     generated_at: new Date().toISOString(),
     app: {
-      name: 'PlotPilot',
+      name: 'NexusForge',
       frontend_version:
         typeof import.meta !== 'undefined' && import.meta.env
           ? String(import.meta.env.VITE_APP_VERSION || import.meta.env.MODE || 'dev')
@@ -254,7 +254,7 @@ export function serializeIncidentsPlain(
   backendAppendix?: BackendFeedbackAppendix | null,
 ): string {
   const lines: string[] = []
-  lines.push('# PlotPilot 诊断（前端事故快照 + 后端日志附录）')
+  lines.push('# NexusForge 诊断（前端事故快照 + 后端日志附录）')
   lines.push(`生成时间：${bundleNow()}`)
   lines.push(`会话：${incidents[0]?.meta.session_id ?? sessionId()}`)
   lines.push('')

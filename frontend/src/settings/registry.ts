@@ -44,8 +44,8 @@ const registry: AppSettingsSectionMeta[] = [
   },
   {
     id: 'about',
-    label: '关于墨枢',
-    description: '产品署名、团队信息与直播入口',
+    label: '关于星枢',
+    description: '产品署名、团队信息',
     order: 90,
     component: () => import('@/components/settings/sections/AboutBrandSection.vue'),
   },

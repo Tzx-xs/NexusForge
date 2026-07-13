@@ -56,7 +56,7 @@ export function installGlobalFeedbackIncidentCapture(app: App): void {
   }
 
   if (typeof window !== 'undefined') {
-    window.PlotPilotFeedback = {
+    window.NexusForgeFeedback = {
       reportError(summary, err) {
         emitManualIncident(summary, err)
       },
