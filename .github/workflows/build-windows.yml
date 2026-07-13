@@ -51,8 +51,10 @@ jobs:
           pip install pyinstaller
 
       # ─── 3. 安装前端依赖 ─────────────────────────────────────
+      # 用 npm install 而非 npm ci：因为 package.json 把 @tauri-apps/api 升级到 ^2.11
+      # 以匹配 Rust crate tauri 2.11.x，package-lock.json 需要更新
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm install --no-fund --no-audit
 
       # ─── 4. 前端构建 ─────────────────────────────────────────
       - name: Build frontend
