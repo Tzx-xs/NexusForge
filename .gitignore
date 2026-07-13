@@ -25,6 +25,8 @@ htmlcov/
 
 # 数据库
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 data/*.db
@@ -56,3 +58,9 @@ frontend/.env.*.local
 # 系统文件
 .DS_Store
 Thumbs.db
+
+# 桌面应用打包产物（PyInstaller / Tauri）
+out/
+out/tauri/
+build/pyinstaller-backend/
+frontend/src-tauri/target/

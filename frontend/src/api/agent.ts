@@ -1,6 +1,13 @@
-import request from './http'
-import { parseSseBlocks } from '@/utils/sseParser'
-import { createTimeoutSignal, combineAbortSignals } from '@/utils/abortSignalPolyfill'
+/**
+ * Agent API — 对接 NexusForge 后端 /api/v1/agent/*
+ *
+ * 移植自 StellarScribe，适配点：
+ * - 用 NexusForge 的 apiClient（axiosInstance）替换 StellarScribe 的 request
+ * - SSE 流改用原生 fetch + resolveHttpUrl + getApiKey
+ * - 响应信封由 axios interceptor 自动解包，业务代码直接拿 data
+ */
+import { apiClient } from './config'
+import { resolveHttpUrl, getApiKey } from './config'
 
 export interface Conversation {
   id: string
@@ -32,103 +39,126 @@ export interface AgentEvent {
   data: Record<string, unknown>
 }
 
+/** 列出会话 */
 export function listConversations(novelId?: string): Promise<Conversation[]> {
-  const url = novelId ? `/agent/conversations?novel_id=${novelId}` : '/agent/conversations'
-  return request.get<Conversation[]>(url)
+  const url = novelId
+    ? `/agent/conversations?novel_id=${encodeURIComponent(novelId)}`
+    : '/agent/conversations'
+  return apiClient.get<Conversation[]>(url) as Promise<Conversation[]>
 }
 
+/** 获取单个会话及其消息 */
 export function getConversation(
   id: string
 ): Promise<{ conversation: Conversation; messages: Message[] }> {
-  return request.get<{ conversation: Conversation; messages: Message[] }>(
+  return apiClient.get<{ conversation: Conversation; messages: Message[] }>(
     `/agent/conversations/${id}`
-  )
+  ) as Promise<{ conversation: Conversation; messages: Message[] }>
 }
 
+/** 删除会话 */
 export function deleteConversation(id: string): Promise<{ deleted: boolean }> {
-  return request.delete<{ deleted: boolean }>(`/agent/conversations/${id}`)
+  return apiClient.delete<{ deleted: boolean }>(
+    `/agent/conversations/${id}`
+  ) as Promise<{ deleted: boolean }>
 }
 
+/**
+ * SSE 流式 Agent 对话。
+ *
+ * 后端端点：POST /api/v1/agent/chat
+ * 事件类型：token | tool_call | tool_result | complete | error
+ *
+ * 使用原生 fetch（axios 不支持 ReadableStream SSE 消费），
+ * 鉴权头通过 getApiKey() 注入（与 axios interceptor 一致）。
+ */
 export async function* streamAgentChat(
   req: AgentChatRequest,
   signal?: AbortSignal
 ): AsyncGenerator<AgentEvent, void, unknown> {
-  // M-02: 统一 120 秒 SSE 超时，与调用方传入的 AbortSignal 合并
-  const { signal: timeoutSignal, cleanup: timeoutCleanup } = createTimeoutSignal(120_000)
-  const { signal: combinedSignal, cleanup: combineCleanup } = combineAbortSignals(
-    signal ? [signal, timeoutSignal] : [timeoutSignal]
-  )
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'text/event-stream',
+  }
+  const apiKey = getApiKey()
+  if (apiKey) {
+    headers['X-API-Key'] = apiKey
+  }
 
-  // 使用原生 fetch 而非 axios.request：axios 不支持 ReadableStream SSE 消费
-  // SSE 请求同样需要认证头，直接从 sessionStorage 读取
-  const apiKey = sessionStorage.getItem('xy-api-key')
+  const response = await fetch(resolveHttpUrl('/api/v1/agent/chat'), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(req),
+    signal,
+  })
 
-  try {
-    const response = await fetch('/api/v1/agent/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'text/event-stream',
-        ...(apiKey ? { 'X-API-Key': apiKey } : {}),
-      },
-      body: JSON.stringify(req),
-      signal: combinedSignal,
-    })
-
-    if (!response.ok || !response.body) {
-      let msg = `Agent 请求失败：HTTP ${response.status}`
+  if (!response.ok || !response.body) {
+    let msg = `Agent 请求失败：HTTP ${response.status}`
+    try {
+      const errBody = await response.json()
+      if (errBody?.message) msg = errBody.message
+      else if (errBody?.detail) msg = errBody.detail
+    } catch {
       try {
-        const errBody = await response.json()
-        if (errBody?.detail) msg = errBody.detail
-        else if (errBody?.message) msg = errBody.message
+        const textBody = await response.text()
+        if (textBody) msg += `：${textBody.slice(0, 200)}`
       } catch {
-        // JSON 解析失败，尝试读取纯文本 body
-        try {
-          const textBody = await response.text()
-          if (textBody) msg += `：${textBody.slice(0, 200)}`
-        } catch {
-          // 忽略
-        }
+        // 忽略
       }
-      throw new Error(msg)
     }
+    throw new Error(msg)
+  }
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder('utf-8')
-    let buffer = ''
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder('utf-8')
+  let buffer = ''
 
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n')
-      const lastSep = buffer.lastIndexOf('\n\n')
-      if (lastSep === -1) continue
-      const ready = buffer.slice(0, lastSep + 2)
-      buffer = buffer.slice(lastSep + 2)
-      for (const evt of parseSseBlocks(ready)) {
+  const parseSseBlock = (block: string): { event: string; data: string } | null => {
+    let event = 'message'
+    let data = ''
+    for (const line of block.split('\n')) {
+      if (line.startsWith('event:')) {
+        event = line.slice(6).trim()
+      } else if (line.startsWith('data:')) {
+        data += line.slice(5).trim()
+      }
+    }
+    return data ? { event, data } : null
+  }
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n')
+    // Phase 6 Task 6.1 修复：用 indexOf 每次只取第一个完整 SSE 块，
+    // 避免 lastIndexOf 把多个事件合并成一个块导致 data 错误追加
+    let sep = buffer.indexOf('\n\n')
+    while (sep !== -1) {
+      const ready = buffer.slice(0, sep + 2)
+      buffer = buffer.slice(sep + 2)
+      const parsed = parseSseBlock(ready)
+      if (parsed) {
         let data: Record<string, unknown> = {}
-        if (evt.data) {
-          try { data = JSON.parse(evt.data) } catch { data = {} }
+        if (parsed.data) {
+          try { data = JSON.parse(parsed.data) } catch { data = {} }
         }
-        yield { type: evt.event as AgentEventType, data }
+        yield { type: parsed.event as AgentEventType, data }
       }
+      sep = buffer.indexOf('\n\n')
     }
+  }
 
-    // 处理尾部残留
-    const tail = decoder.decode()
-    if (tail) buffer += tail
-    if (buffer.trim()) {
-      for (const evt of parseSseBlocks(buffer)) {
-        let data: Record<string, unknown> = {}
-        if (evt.data) {
-          try { data = JSON.parse(evt.data) } catch { data = {} }
-        }
-        yield { type: evt.event as AgentEventType, data }
+  // 处理尾部残留
+  const tail = decoder.decode()
+  if (tail) buffer += tail
+  if (buffer.trim()) {
+    const parsed = parseSseBlock(buffer)
+    if (parsed) {
+      let data: Record<string, unknown> = {}
+      if (parsed.data) {
+        try { data = JSON.parse(parsed.data) } catch { data = {} }
       }
+      yield { type: parsed.event as AgentEventType, data }
     }
-  } finally {
-    // 清理超时定时器与合并信号监听器，避免内存泄漏
-    combineCleanup()
-    timeoutCleanup()
   }
 }

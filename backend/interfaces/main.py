@@ -14,6 +14,7 @@ from domain.shared.exceptions import DomainException
 from interfaces.api.v1.agent import router as agent_router
 from interfaces.api.v1.ai_invocation import router as ai_invocation_router
 from interfaces.api.v1.autonomous import router as autonomous_router
+from interfaces.api.v1.autopilot import router as autopilot_router
 from interfaces.api.v1.bible import router as bible_router
 from interfaces.api.v1.chapters import router as chapters_router
 from interfaces.api.v1.checkpoint import router as checkpoint_router
@@ -30,6 +31,7 @@ from interfaces.api.v1.review_tasks import router as review_tasks_router
 from interfaces.api.v1.search import router as search_router
 from interfaces.api.v1.settings import router as settings_router
 from interfaces.api.v1.snapshots import router as snapshots_router
+from interfaces.api.v1.stats_legacy import router as stats_legacy_router
 from interfaces.api.v1.storylines import router as storylines_router
 from interfaces.api.v1.voice import router as voice_router
 from interfaces.api.v1.worldview import router as worldview_router
@@ -183,12 +185,14 @@ app.include_router(foreshadows_router)
 app.include_router(quality_router)
 app.include_router(voice_router)
 app.include_router(autonomous_router)
+app.include_router(autopilot_router)
 app.include_router(agent_router)
 app.include_router(storylines_router)
 app.include_router(worldview_router)
 app.include_router(snapshots_router)
 app.include_router(export_router)
 app.include_router(search_router)
+app.include_router(stats_legacy_router)
 # NexusForge 新增端点
 app.include_router(dag_router)
 app.include_router(governance_router)

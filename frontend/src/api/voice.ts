@@ -1,93 +1,40 @@
-import request from './http'
+/**
+ * 文风金库 API
+ * 后端路由：/api/v1/novels/{novel_id}/voice/...
+ */
+import { apiClient } from './config'
 
-export interface VoiceFingerprint {
-  fingerprint_id: string
-  novel_id: string
-  name: string
-  lexical_richness: number
-  sentence_length_mean: number
-  sentence_length_std: number
-  paragraph_length_mean: number
-  paragraph_length_std: number
-  unique_char_ratio: number
-  function_word_ratio: number
-  content_word_ratio: number
-  dialogue_ratio: number
-  narration_ratio: number
-  description_ratio: number
-  punctuation_density: Record<string, number>
-  common_ngrams: string[]
-  signature_phrases: string[]
-  sentence_structure_diversity: number
-  paragraph_starts: string[]
-  avg_word_per_sentence: number
-  clause_density: number
-  source_sample_count: number
-  source_char_count: number
-  version: number
-  created_at: string
-  updated_at: string
+export interface VoiceSamplePayload {
+  ai_original: string
+  author_refined: string
+  chapter_number: number
+  scene_type?: string
 }
 
-export interface VoiceDriftResult {
-  drifted: boolean
-  overall_similarity: number
-  dimension_scores: Record<string, number>
-  drift_dimensions: string[]
-  details: Record<string, unknown>
+export interface VoiceSampleResponse {
+  sample_id: string
 }
 
-export interface VoiceFingerprintInfo {
-  id: string
-  name: string
-  novel_id: string
+export interface VoiceFingerprintDTO {
+  adjective_density: number
+  avg_sentence_length: number
+  sentence_count: number
   sample_count: number
-  char_count: number
+  last_updated: string
 }
 
-export function extractFingerprint(
-  texts: string[],
-  name: string = 'default',
-  novelId: string = ''
-) {
-  return request.post<VoiceFingerprint>('/voice/extract', { texts, name, novel_id: novelId })
-}
+export const voiceApi = {
+  /** POST /api/v1/novels/{novel_id}/voice/samples — 提交文风样本对 */
+  createSample: (novelId: string, payload: VoiceSamplePayload) =>
+    apiClient.post<VoiceSampleResponse>(
+      `/novels/${novelId}/voice/samples`,
+      payload
+    ) as unknown as Promise<VoiceSampleResponse>,
 
-export function listFingerprints() {
-  return request.get<VoiceFingerprintInfo[]>('/voice/fingerprints')
-}
-
-export function getFingerprint(fpId: string) {
-  return request.get<VoiceFingerprint>(`/voice/fingerprints/${fpId}`)
-}
-
-export function detectDrift(baselineId: string, sampleText: string) {
-  return request.post<VoiceDriftResult>('/voice/detect-drift', {
-    baseline_id: baselineId,
-    sample_text: sampleText,
-  })
-}
-
-export function generateRewritePrompt(
-  baselineId: string,
-  targetText: string,
-  driftDimensions: string[] = []
-) {
-  return request.post<{ prompt: string }>('/voice/rewrite-prompt', {
-    baseline_id: baselineId,
-    target_text: targetText,
-    drift_dimensions: driftDimensions,
-  })
-}
-
-export function getStyleGuide(fpId: string) {
-  return request.get<{ style_guide: string }>(`/voice/fingerprints/${fpId}/style-guide`)
-}
-
-export function mergeFingerprints(texts: string[], name: string, novelId: string = '') {
-  return request.post<VoiceFingerprint>('/voice/fingerprints/merge', {
-    texts,
-    name,
-    novel_id: novelId,
-  })
+  /** GET /api/v1/novels/{novel_id}/voice/fingerprint — 查看文风指纹统计 */
+  getFingerprint: (novelId: string, povCharacterId?: string) =>
+    apiClient.get<VoiceFingerprintDTO>(
+      `/novels/${novelId}/voice/fingerprint`,
+      { params: povCharacterId ? { pov_character_id: povCharacterId } : {} }
+    ) as unknown as Promise<VoiceFingerprintDTO>,
 }

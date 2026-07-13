@@ -1,0 +1,55 @@
+# ════════════════════════════════════════════
+# NexusForge NSIS / Tauri 安装包专用：运行时依赖（精简版）
+# ════════════════════════════════════════════
+# 参考 PlotPilot 的 requirements-nsis.txt 设计：
+# - 刻意排除 chromadb / sentence-transformers / faiss-cpu 等重型 ML 栈
+#   （PyTorch + faiss 会让冻结包体积暴涨到 2GiB+，触发 NSIS Internal compiler error）
+# - 代码已有完整 fallback：
+#   * SimpleVectorStore（纯 JSON 持久化）替代 ChromaDB
+#   * SimpleHashEmbedding / OpenAIEmbeddingService 替代 sentence-transformers
+# - 排除开发依赖（pytest/ruff/mypy）
+# - 与 requirements.txt 功能一致，体积更小、安装更快
+
+# ── Web 框架 ──
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+sse-starlette>=2.0.0
+python-multipart>=0.0.6
+
+# ── 数据验证 ──
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+
+# ── HTTP 客户端 ──
+httpx>=0.27.0
+
+# ── 配置与工具 ──
+python-dotenv>=1.0.0
+json-repair>=0.30.0
+PyYAML>=6.0
+
+# ── 安全 ──
+cryptography>=43.0.0
+
+# ── 数据库 ──
+sqlalchemy>=2.0.0
+alembic>=1.13.0
+
+# ── Token 计数（BLOCK-07: 精确中文 Token 统计）──
+tiktoken>=0.7.0
+
+# ── 导出（DOCX / EPUB）──
+python-docx>=1.1.0
+ebooklib>=0.18.0
+lxml>=4.9.0
+
+# ──────────────────────────────────────────────
+# 以下依赖被刻意排除（NSIS 打包精简）：
+# ──────────────────────────────────────────────
+# chromadb>=0.5.0              # 替代方案：SimpleVectorStore（infrastructure/ai/chromadb_vector_store.py）
+# sentence-transformers>=2.5.0 # 替代方案：OpenAIEmbeddingService / SimpleHashEmbedding（embedding_service.py）
+# faiss-cpu>=1.8.0             # 代码未直接引用，仅作为 chromadb 间接依赖存在
+#
+# 如需启用本地语义检索（离线 embedding），用户可在安装后另行安装：
+#   pip install chromadb sentence-transformers faiss-cpu
+# 然后在 settings 中将 vector_store_provider 切换为 "chromadb"

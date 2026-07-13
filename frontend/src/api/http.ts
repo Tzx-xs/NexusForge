@@ -1,139 +1,133 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
-import { toast } from '@/utils/toast'
-import { fetchApiConfig } from '@/utils/config'
+import { resolveHttpUrl, getApiKey, isNexusForgeEnvelope } from './config'
 
-export interface ApiResponse<T = unknown> {
-  code: number
-  message: string
-  data: T
+export class HttpError extends Error {
+  status: number
+  statusText: string
+  body: unknown
+
+  constructor(response: Response, body: unknown) {
+    // NexusForge：从后端信封 {code, message, data} 提取 message，附加到默认 HTTP 错误描述后
+    let serverMessage = ''
+    if (body && typeof body === 'object' && 'message' in body) {
+      const msg = (body as { message?: unknown }).message
+      if (typeof msg === 'string' && msg.length > 0) serverMessage = msg
+    }
+    const prefix = `HTTP ${response.status} ${response.statusText}`.trim()
+    super(serverMessage ? `${prefix}: ${serverMessage}` : prefix)
+    this.name = 'HttpError'
+    this.status = response.status
+    this.statusText = response.statusText
+    this.body = body
+  }
 }
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
-
-export function getAuthHeaders(): Record<string, string> {
-  const apiKey = sessionStorage.getItem('xy-api-key')
-  return apiKey ? { 'X-API-Key': apiKey } : {}
+export interface FetchJsonOptions extends Omit<RequestInit, 'body'> {
+  body?: unknown
+  timeoutMs?: number
 }
 
-const _errorDebounce = new Map<string, number>()
-const _pendingRetry = new Set<string>()
-
-function debounceError(key: string): boolean {
-  const now = Date.now()
-  const last = _errorDebounce.get(key)
-  if (last && now - last < 5000) return true
-  _errorDebounce.set(key, now)
-  return false
+function mergeHeaders(headers?: HeadersInit, hasBody = false): Headers {
+  const merged = new Headers(headers)
+  if (hasBody && !merged.has('Content-Type')) {
+    merged.set('Content-Type', 'application/json')
+  }
+  return merged
 }
 
-const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+function composeAbortSignal(signal?: AbortSignal | null, timeoutMs?: number): {
+  signal?: AbortSignal
+  cleanup: () => void
+} {
+  if (!timeoutMs) {
+    return { signal: signal ?? undefined, cleanup: () => {} }
+  }
+  const controller = new AbortController()
+  const abort = () => controller.abort()
+  const timer = window.setTimeout(abort, timeoutMs)
 
-axiosInstance.interceptors.request.use((config) => {
-  const apiKey = sessionStorage.getItem('xy-api-key')
+  if (signal?.aborted) {
+    abort()
+  } else {
+    signal?.addEventListener('abort', abort, { once: true })
+  }
+
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      window.clearTimeout(timer)
+      signal?.removeEventListener('abort', abort)
+    },
+  }
+}
+
+async function readResponseBody(response: Response): Promise<unknown> {
+  if (response.status === 204) return undefined
+  const text = await response.text()
+  if (!text.trim()) return undefined
+  try {
+    return JSON.parse(text)
+  } catch {
+    return text
+  }
+}
+
+export async function fetchJson<T>(absolutePathFromRoot: string, options: FetchJsonOptions = {}): Promise<T> {
+  const { body, timeoutMs, signal, headers, ...rest } = options
+  const hasBody = body !== undefined
+  const abort = composeAbortSignal(signal, timeoutMs)
+  // NexusForge：注入 X-API-Key 鉴权头
+  const finalHeaders = mergeHeaders(headers, hasBody)
+  const apiKey = getApiKey()
   if (apiKey) {
-    config.headers['X-API-Key'] = apiKey
+    finalHeaders.set('X-API-Key', apiKey)
   }
-  return config
-})
-
-axiosInstance.interceptors.response.use(
-  (response) => {
-    const res = response.data
-    const isApiEnvelope =
-      res !== null &&
-      typeof res === 'object' &&
-      !Array.isArray(res) &&
-      'code' in res &&
-      typeof (res as Record<string, unknown>).code === 'number' &&
-      'data' in res
-    if (isApiEnvelope) {
-      return (res as ApiResponse).data as unknown as typeof response
+  try {
+    const response = await fetch(resolveHttpUrl(absolutePathFromRoot), {
+      ...rest,
+      signal: abort.signal,
+      headers: finalHeaders,
+      body: hasBody ? JSON.stringify(body) : undefined,
+    })
+    const data = await readResponseBody(response)
+    if (!response.ok) {
+      throw new HttpError(response, data)
     }
-    return res as typeof response
-  },
-  async (error) => {
-    const status = error.response?.status
-    let backendError = error.response?.data
-    const originalRequest = error.config
-
-    if (backendError instanceof Blob) {
-      try {
-        const text = await backendError.text()
-        backendError = JSON.parse(text)
-      } catch {
-        backendError = null
-      }
+    // NexusForge：解包 {code, message, data} 信封，返回 data 字段
+    if (isNexusForgeEnvelope(data)) {
+      return data.data as T
     }
-
-    if (backendError && backendError.message) {
-      error.message = backendError.message
-    }
-
-    if (status === 404) {
-      error.message = backendError?.message || '请求的资源不存在'
-    } else if (status === 500) {
-      error.message = backendError?.message || '服务器内部错误'
-    } else if (status === 502 || status === 504) {
-      error.message = backendError?.message || 'AI 服务暂时不可用'
-    } else if (status === 401) {
-      error.message = backendError?.message || '未授权访问'
-    } else if (status === 403) {
-      error.message = backendError?.message || '无权限访问'
-    }
-
-    if (status === 401 && originalRequest && !originalRequest._retried) {
-      const requestKey = `${originalRequest.method}:${originalRequest.url}`
-      if (!_pendingRetry.has(requestKey)) {
-        _pendingRetry.add(requestKey)
-        try {
-          const newKey = await fetchApiConfig()
-          if (newKey) {
-            originalRequest._retried = true
-            originalRequest.headers['X-API-Key'] = newKey
-            return axiosInstance(originalRequest)
-          }
-        } finally {
-          _pendingRetry.delete(requestKey)
-        }
-      }
-    }
-
-    const errKey = `${status}:${error.message}`
-    if ((status === 401 || status === 403) && debounceError(errKey)) {
-      console.warn('[API] Suppressed repeated auth error:', error.message)
-      return Promise.reject(error)
-    }
-
-    if (error.code !== 'ERR_CANCELED' && !originalRequest?._silent) {
-      console.error('API Error:', error.message)
-      toast.error(error.message || '请求失败')
-    }
-    return Promise.reject(error)
-  }
-)
-
-declare module 'axios' {
-  interface AxiosRequestConfig {
-    _retried?: boolean
-    _silent?: boolean
+    return data as T
+  } finally {
+    abort.cleanup()
   }
 }
 
-const request = axiosInstance as Omit<
-  AxiosInstance,
-  'get' | 'post' | 'put' | 'delete' | 'patch'
-> & {
-  get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>
-  post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>
-  put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>
-  delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>
-  patch<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>
+export async function fetchOk(absolutePathFromRoot: string, options: FetchJsonOptions = {}): Promise<Response> {
+  const { timeoutMs, signal, body, headers, ...rest } = options
+  const hasBody = body !== undefined
+  const abort = composeAbortSignal(signal, timeoutMs)
+  // NexusForge：注入 X-API-Key 鉴权头（fetchOk 不解包信封，调用方自行处理 Response）
+  const finalHeaders = mergeHeaders(headers, hasBody)
+  const apiKey = getApiKey()
+  if (apiKey) {
+    finalHeaders.set('X-API-Key', apiKey)
+  }
+  try {
+    const response = await fetch(resolveHttpUrl(absolutePathFromRoot), {
+      ...rest,
+      signal: abort.signal,
+      headers: finalHeaders,
+      body: hasBody ? JSON.stringify(body) : undefined,
+    })
+    if (!response.ok) {
+      throw new HttpError(response, await readResponseBody(response))
+    }
+    return response
+  } finally {
+    abort.cleanup()
+  }
 }
 
-export default request
+export function fetchUrl(absolutePathFromRoot: string): string {
+  return resolveHttpUrl(absolutePathFromRoot)
+}

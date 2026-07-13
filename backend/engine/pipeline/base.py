@@ -179,7 +179,12 @@ class StoryPipeline(BaseStoryPipeline):
             GenerateStep(self.llm_client, self.prompt_manager, self.context_builder),
             ValidateContentStep(self.quality_service),
             SaveChapterStep(self.chapter_repo, self.novel_repo),
-            ValidateVoiceStep(self.voice_service),
+            # Phase 5 Task 5.2：注入 llm_client + chapter_repo 启用文风漂移定向改写闭环
+            ValidateVoiceStep(
+                self.voice_service,
+                llm_client=self.llm_client,
+                chapter_repo=self.chapter_repo,
+            ),
             RunPostCommitStep(self.aftermath_pipeline),
             ScoreTensionStep(self.chapter_repo),
             FinalizeStep(self.novel_repo, self.chapter_repo),

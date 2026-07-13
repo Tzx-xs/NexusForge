@@ -1,0 +1,47 @@
+id: chapter-outline
+name: 章节大纲生成（StellarScribe 默认）
+category: planning
+source: stellar
+description: StellarScribe 默认章纲生成提示词。
+builtin: true
+tags:
+  - 大纲生成
+  - StellarScribe默认
+variables:
+  - name: novel_title
+    desc: 小说标题
+    type: string
+    required: true
+  - name: novel_genre
+    desc: 小说类型
+    type: string
+    required: true
+  - name: novel_premise
+    desc: 核心设定
+    type: string
+    required: true
+  - name: characters
+    desc: 人物设定
+    type: string
+    required: true
+  - name: world_settings
+    desc: 世界观设定
+    type: string
+    required: false
+    default: ''
+  - name: previous_summary
+    desc: 前文概要
+    type: string
+    required: false
+    default: ''
+  - name: chapter_number
+    desc: 章节序号
+    type: integer
+    required: true
+  - name: chapter_title
+    desc: 章节标题
+    type: string
+    required: true
+output_format: markdown
+estimated_tokens: 800
+sort_order: 5

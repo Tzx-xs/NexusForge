@@ -1,75 +1,65 @@
-import request from './http'
+import { apiClient } from './config'
 
-export interface MemoryFact {
+export interface MemoryAtom {
   id: string
   novel_id: string
-  fact_type: string
-  subject: string
-  predicate: string
-  object_value: string
-  confidence: number
-  is_immutable: boolean
-  source_chapter_id: string | null
-  evidence_text: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface MemoryBeat {
-  id: string
-  novel_id: string
-  chapter_id: string
-  chapter_index: number
-  beat_type: string
-  content: string
-  narrative_weight: number
-  is_turning_point: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface MemoryClue {
-  id: string
-  novel_id: string
-  clue_text: string
+  entity_id: string
+  entity_type: string
+  memory_type: string
+  scope: string
+  source: string
   status: string
-  planted_chapter_id: string | null
-  resolved_chapter_id: string | null
-  importance: number
-  related_characters: string[]
-  created_at: string
-  updated_at: string
+  payload: Record<string, unknown>
+  chapter_number?: number | null
+  text_span: string
+  confidence: number
 }
 
-export interface IronLockData {
-  fact_locks: MemoryFact[]
-  beat_locks: MemoryBeat[]
-  clue_locks: MemoryClue[]
-  character_whitelist: string[]
-  death_list: string[]
-  relationship_map: Record<string, string[]>
+export interface CharacterProjection {
+  novel_id: string
+  entity_id: string
+  character_id: string
+  name: string
+  constitution: Record<string, unknown>
+  current_state: Record<string, unknown>
+  active_scars: Array<Record<string, unknown>>
+  active_motivations: Array<Record<string, unknown>>
+  emotional_arc: Array<Record<string, unknown>>
+  relationships: Array<Record<string, unknown>>
+  knowledge_boundary: Record<string, unknown>
+  voice_fingerprint: Record<string, unknown>
+  arc_debts: Array<Record<string, unknown>>
+  recent_evidence: MemoryAtom[]
+  candidate_memories: MemoryAtom[]
+  context_locks: { t0?: string; t1?: string; t2?: string }
 }
 
-export function getIronLock(novelId: string, upToChapter?: number) {
-  const params = upToChapter ? { up_to_chapter: upToChapter } : {}
-  return request.get<IronLockData>(`/novels/${novelId}/memory/iron-lock`, { params })
-}
+export const memoryApi = {
+  getCharacterProjection: (novelId: string, characterId: string) =>
+    apiClient.get<CharacterProjection>(
+      `/novels/${novelId}/characters/${characterId}/projection`,
+    ) as unknown as Promise<CharacterProjection>,
 
-export function getMemoryFacts(novelId: string, factType?: string, immutableOnly?: boolean) {
-  const params: Record<string, string | number | boolean | undefined> = {}
-  if (factType) params.fact_type = factType
-  if (immutableOnly !== undefined) params.immutable_only = immutableOnly
-  return request.get<MemoryFact[]>(`/novels/${novelId}/memory/facts`, { params })
-}
+  getChapterCandidates: (novelId: string, chapterNumber: number) =>
+    apiClient.get<{ chapter_number: number; candidates: MemoryAtom[] }>(
+      `/novels/${novelId}/chapters/${chapterNumber}/memory-candidates`,
+    ) as unknown as Promise<{ chapter_number: number; candidates: MemoryAtom[] }>,
 
-export function getMemoryBeats(novelId: string, upToChapter?: number) {
-  const params: Record<string, string | number | boolean | undefined> = {}
-  if (upToChapter !== undefined) params.up_to_chapter = upToChapter
-  return request.get<MemoryBeat[]>(`/novels/${novelId}/memory/beats`, { params })
-}
+  confirm: (novelId: string, atomId: string, note = '') =>
+    apiClient.post<{ ok: boolean; atom: MemoryAtom }>(
+      `/novels/${novelId}/memory-atoms/${atomId}/confirm`,
+      { note },
+    ) as unknown as Promise<{ ok: boolean; atom: MemoryAtom }>,
 
-export function getMemoryClues(novelId: string, status?: string) {
-  const params: Record<string, string | number | boolean | undefined> = {}
-  if (status) params.status = status
-  return request.get<MemoryClue[]>(`/novels/${novelId}/memory/clues`, { params })
+  reject: (novelId: string, atomId: string, note = '') =>
+    apiClient.post<{ ok: boolean; atom: MemoryAtom }>(
+      `/novels/${novelId}/memory-atoms/${atomId}/reject`,
+      { note },
+    ) as unknown as Promise<{ ok: boolean; atom: MemoryAtom }>,
+
+  promote: (novelId: string, atomId: string, note = '') =>
+    apiClient.post<{ ok: boolean; atom: MemoryAtom }>(
+      `/novels/${novelId}/memory-atoms/${atomId}/promote`,
+      { note },
+    ) as unknown as Promise<{ ok: boolean; atom: MemoryAtom }>,
 }

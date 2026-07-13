@@ -52,6 +52,29 @@ class VoiceService:
             return None
         return self.rewriter.generate_rewrite_prompt(baseline, target_text, drift_dimensions)
 
+    async def rewrite_content(
+        self,
+        baseline_id: str,
+        target_text: str,
+        drift_dimensions: list[str],
+        llm_client,
+    ) -> str | None:
+        """Phase 5 Task 5.2：调用 LLM 执行文风定向改写。
+
+        Args:
+            baseline_id: 基准指纹 ID
+            target_text: 待改写正文
+            drift_dimensions: 漂移维度列表
+            llm_client: LLMClient 实例
+
+        Returns:
+            改写后的正文；若 baseline 不存在则返回 None（调用方应保留原文本）。
+        """
+        baseline = self._fingerprints.get(baseline_id)
+        if not baseline:
+            return None
+        return await self.rewriter.rewrite(baseline, target_text, drift_dimensions, llm_client)
+
     def generate_style_guide(self, fingerprint_id: str) -> str | None:
         fp = self._fingerprints.get(fingerprint_id)
         if not fp:

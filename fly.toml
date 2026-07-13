@@ -1,5 +1,5 @@
-# Fly.io 配置 — 星渊笔后端
-app = "xingyuanbi"
+# Fly.io 配置 — NexusForge（星枢）后端
+app = "nexusforge"
 primary_region = "nrt"
 
 [build]
@@ -7,11 +7,11 @@ primary_region = "nrt"
 
 [env]
   APP_ENV = "production"
-  DATABASE_URL = "sqlite:////data/xingyuanbi.db"
-  CORS_ORIGINS = "https://xingyuanbi.pages.dev"
+  DATABASE_URL = "sqlite:////data/nexusforge.db"
+  CORS_ORIGINS = "https://nexusforge.pages.dev"
 
 [[mounts]]
-  source = "xingyuanbi_data"
+  source = "nexusforge_data"
   destination = "/data"
 
 [http_service]

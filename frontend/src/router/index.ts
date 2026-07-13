@@ -1,100 +1,29 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
-import Dashboard from '@/views/Dashboard.vue'
+import { createRouter, createWebHistory } from 'vue-router'
 
-const routes = [
-  {
-    path: '/',
-    name: 'dashboard',
-    component: Dashboard,
-  },
-  {
-    path: '/bible',
-    redirect: () => {
-      const lastNovelId = localStorage.getItem('xy-last-novel')
-      if (!lastNovelId) return '/'
-      return `/workspace/${lastNovelId}/writing/1`
-    },
-  },
-  {
-    path: '/outline',
-    redirect: () => {
-      const lastNovelId = localStorage.getItem('xy-last-novel')
-      if (!lastNovelId) return '/'
-      return `/workspace/${lastNovelId}/writing/1`
-    },
-  },
-  {
-    path: '/workspace/:novelId',
-    component: () => import('@/views/Workspace.vue'),
-    children: [
-      {
-        path: '',
-        redirect: 'writing/1',
-      },
-      {
-        path: 'writing/:chapterId',
-        name: 'writing',
-        component: () => import('@/views/WritingPage.vue'),
-      },
-    ],
-  },
-  {
-    path: '/characters',
-    name: 'characters',
-    component: () => import('@/views/CharactersPage.vue'),
-    meta: { requiresNovel: true },
-  },
-  {
-    path: '/review',
-    name: 'review',
-    component: () => import('@/views/ReviewPage.vue'),
-    meta: { requiresNovel: true },
-  },
-  {
-    path: '/new-book',
-    name: 'new-book',
-    component: () => import('@/views/NewBookWizard.vue'),
-  },
-  {
-    path: '/settings',
-    name: 'settings',
-    component: () => import('@/views/Settings.vue'),
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    name: 'not-found',
-    component: () => import('@/views/NotFound.vue'),
-  },
-]
+const Home = () => import('../views/Home.vue')
+const Workbench = () => import('../views/Workbench.vue')
+const Chapter = () => import('../views/Chapter.vue')
+const Cast = () => import('../views/Cast.vue')
+const CharacterGraph = () => import('../views/CharacterGraph.vue')
+const LocationGraph = () => import('../views/LocationGraph.vue')
+const CharacterSchedulerSimulator = () =>
+  import('../components/debug/CharacterSchedulerSimulator.vue')
 
 const router = createRouter({
-  history: createWebHashHistory(),
-  routes,
-})
-
-router.beforeEach((to, _from, next) => {
-  // 依赖 last-novel 的路由，缺少 novelId 时重定向到首页
-  if (to.meta.requiresNovel) {
-    const lastNovelId = localStorage.getItem('xy-last-novel')
-    if (!lastNovelId) {
-      next('/')
-      return
-    }
-  }
-
-  // 校验 workspace 路由的 novelId 参数
-  if (to.params.novelId !== undefined) {
-    const novelId = String(to.params.novelId)
-    if (!novelId || novelId === 'undefined' || novelId === 'null') {
-      next('/')
-      return
-    }
-  }
-  next()
-})
-
-router.onError((error) => {
-  console.error('Router error:', error)
+  history: createWebHistory(),
+  routes: [
+    { path: '/', name: 'Home', component: Home },
+    { path: '/book/:slug/workbench', name: 'Workbench', component: Workbench },
+    { path: '/book/:slug/cast', name: 'Cast', component: Cast },
+    { path: '/book/:slug/chapter/:id', name: 'Chapter', component: Chapter },
+    { path: '/book/:slug/characters', name: 'CharacterGraph', component: CharacterGraph },
+    { path: '/book/:slug/location-graph', name: 'LocationGraph', component: LocationGraph },
+    {
+      path: '/debug/scheduler',
+      name: 'CharacterSchedulerSimulator',
+      component: CharacterSchedulerSimulator,
+    },
+  ],
 })
 
 export default router

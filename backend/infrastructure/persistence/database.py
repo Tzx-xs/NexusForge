@@ -108,6 +108,7 @@ class Database:
             self._ensure_perspective_column(conn)
             self._ensure_gender_age_columns(conn)
             self._ensure_snapshot_content_column(conn)
+            self._ensure_novel_extras_columns(conn)
             # 2. FTS5 段单独容错执行
             if fts5_schema:
                 try:
@@ -179,6 +180,31 @@ class Database:
         if 'content' not in columns:
             conn.execute("ALTER TABLE snapshots ADD COLUMN content TEXT DEFAULT ''")
             logger.info("已添加 content 列到 snapshots 表")
+
+    def _ensure_novel_extras_columns(self, conn: sqlite3.Connection) -> None:
+        """确保 novels 表包含 NexusForge Phase 3.5 扩展列。
+
+        对齐 PlotPilot 前端 NovelDTO 字段，缺失会导致 NovelRepository.create/update 崩溃。
+        与 migrations/012_add_novel_extras.py 同义，但本方法用于 schema.sql 降级路径。
+        """
+        rows = conn.execute("PRAGMA table_info(novels)").fetchall()
+        columns = [row[1] for row in rows]
+        extras = [
+            ("author", "TEXT DEFAULT ''"),
+            ("stage", "TEXT DEFAULT 'preparing'"),
+            ("auto_approve_mode", "INTEGER DEFAULT 0"),
+            ("target_words_per_chapter", "INTEGER DEFAULT 2500"),
+            ("generation_prefs", "TEXT DEFAULT '{}'"),
+            ("world_preset", "TEXT DEFAULT ''"),
+            ("story_structure", "TEXT DEFAULT ''"),
+            ("pacing_control", "TEXT DEFAULT ''"),
+            ("writing_style", "TEXT DEFAULT ''"),
+            ("special_requirements", "TEXT DEFAULT ''"),
+        ]
+        for col_name, ddl_type in extras:
+            if col_name not in columns:
+                conn.execute(f"ALTER TABLE novels ADD COLUMN {col_name} {ddl_type}")
+                logger.info("已添加 %s 列到 novels 表", col_name)
 
     def query(self, sql: str, params: tuple = ()) -> list:
         # L-02 修复：删除空 try/finally: pass 死代码。

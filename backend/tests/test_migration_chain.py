@@ -19,8 +19,8 @@ def test_migrations_directory_exists():
 
 
 def test_migration_files_present():
-    # 001-007 原有 + 008-011 新增（DAG/governance/checkpoint/ai_invocation）
-    assert len(MIGRATION_FILES) == 11, f"期望11个迁移文件，实际{len(MIGRATION_FILES)}: {MIGRATION_FILES}"
+    # 001-007 原有 + 008-011 引擎内核 + 012 novel_extras（对齐 PlotPilot 前端字段）
+    assert len(MIGRATION_FILES) == 12, f"期望12个迁移文件，实际{len(MIGRATION_FILES)}: {MIGRATION_FILES}"
 
 
 def test_001_initial_schema_syntax():

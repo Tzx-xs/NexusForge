@@ -4,7 +4,7 @@ from .voice_models import VoiceFingerprint
 class VoiceRewriter:
     """文风重写建议生成器
 
-    提供目标文风对齐的改写提示
+    提供目标文风对齐的改写提示，并可调用 LLM 执行实际改写。
     """
 
     def generate_rewrite_prompt(self, baseline: VoiceFingerprint, target_text: str, drift_dimensions: list[str]) -> str:
@@ -43,9 +43,56 @@ class VoiceRewriter:
         if baseline.signature_phrases:
             prompt += f"\n参考常用表达：{', '.join(baseline.signature_phrases[:5])}"
 
-        prompt += f"\n\n待改写文本：\n{target_text}\n"
+        prompt += (
+            "\n\n要求：\n"
+            "1. 保持原文的情节、人物、场景信息完全不变，只调整文风\n"
+            "2. 不要增删情节内容，不要改变叙事视角\n"
+            "3. 直接输出改写后的正文，不要加任何说明、前言、注释\n\n"
+            f"待改写文本：\n{target_text}\n"
+        )
 
         return prompt
+
+    async def rewrite(
+        self,
+        baseline: VoiceFingerprint,
+        target_text: str,
+        drift_dimensions: list[str],
+        llm_client,
+    ) -> str:
+        """调用 LLM 执行文风定向改写。
+
+        Phase 5 Task 5.2：实现真实改写逻辑。
+
+        Args:
+            baseline: 基准文风指纹
+            target_text: 待改写的正文
+            drift_dimensions: 漂移维度列表（来自 VoiceDriftResult.drift_dimensions）
+            llm_client: LLMClient 实例，需实现 ``await chat(prompt, system_prompt=...) -> str``
+
+        Returns:
+            改写后的正文。若 LLM 返回空或异常，回退返回原文本（不破坏管线）。
+        """
+        prompt = self.generate_rewrite_prompt(baseline, target_text, drift_dimensions)
+        system_prompt = (
+            "你是一位资深小说编辑，擅长在保持情节不变的前提下调整文风。"
+            "严格按用户指令改写，只输出改写后的正文。"
+        )
+        try:
+            result = await llm_client.chat(prompt, system_prompt=system_prompt)
+            rewritten = str(result).strip()
+            # LLM 偶尔会用 markdown 代码块包裹，剥离之
+            if rewritten.startswith("```"):
+                lines = rewritten.splitlines()
+                if lines and lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines and lines[-1].strip() == "```":
+                    lines = lines[:-1]
+                rewritten = "\n".join(lines).strip()
+            return rewritten or target_text
+        except Exception:
+            # 改写失败不阻断管线，回退原文本
+            return target_text
 
     def generate_style_guide(self, fp: VoiceFingerprint) -> str:
         guide = "=== 文风风格指南 ===\n\n"
