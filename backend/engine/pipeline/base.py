@@ -62,10 +62,17 @@ class BaseStoryPipeline(ABC):
                 result = await step.execute(ctx)
                 ctx.add_step_result(result)
 
-                if result.status == "failed":
+                # 三态语义：
+                #   failed  → 短路：停止管线（已完成步骤副作用不回滚）
+                #   skipped → 跳过本步，继续管线
+                #   success → 继续
+                if result.failed:
                     ctx.status = PipelineStatus.FAILED
                     logger.error("Pipeline step failed: %s: %s", step.name, result.error)
                     break
+
+                if result.skipped:
+                    logger.info("Pipeline step skipped: %s: %s", step.name, result.metadata.get("reason", ""))
 
             except Exception as e:
                 logger.exception("Pipeline step exception: %s", step.name)
