@@ -7,6 +7,20 @@ from .context import PipelineContext, PipelineStatus, StepResult
 logger = logging.getLogger(__name__)
 
 
+# 默认软失败步骤集合（PlotPilot 语义）
+# 这些步骤失败时不阻断管线，转为 warning 记录，继续执行后续步骤：
+#   - validate_content  策略验证（反 AI/俗套/一致性）：失败记录违规但章节仍可保存
+#   - validate_voice    文风审计（声线漂移）：失败记录漂移但章节仍可保存
+#   - run_post_commit   章后管线（叙事/向量/伏笔）：失败不阻断主流程
+#   - score_tension     张力打分：失败用默认分兜底
+DEFAULT_SOFT_FAIL_STEPS: frozenset[str] = frozenset({
+    "validate_content",
+    "validate_voice",
+    "run_post_commit",
+    "score_tension",
+})
+
+
 class PipelineStep(ABC):
     name: str = ""
 
@@ -34,21 +48,37 @@ class BaseStoryPipeline(ABC):
     2. build_context         四层洋葱上下文装配
     3. prepare_chapter_plan  章纲/Beat Sheet 准备
     4. generate              LLM 正文生成
-    5. validate_content      策略验证
+    5. validate_content      策略验证（软失败：记录违规不阻断）
     6. save_chapter          保存章节
-    7. validate_voice        文风审计
-    8. run_post_commit       章后管线
-    9. score_tension         张力打分
+    7. validate_voice        文风审计（软失败：记录漂移不阻断）
+    8. run_post_commit       章后管线（软失败：不阻断主流程）
+    9. score_tension         张力打分（软失败：默认分兜底）
     10. finalize             收尾
+
+    软失败语义（借鉴 PlotPilot）：
+        validate_content / validate_voice / run_post_commit / score_tension
+        这 4 个审计/评估步骤失败时不短路管线，转为 warning 记录后继续。
+        仅 find_next_chapter / build_context / prepare_chapter_plan / generate /
+        save_chapter / finalize 这类核心步骤失败才短路。
     """
 
     def __init__(self):
         self.steps: list[PipelineStep] = []
+        self._soft_fail_steps: set[str] = set(DEFAULT_SOFT_FAIL_STEPS)
         self._register_steps()
 
     @abstractmethod
     def _register_steps(self):
         pass
+
+    @property
+    def soft_fail_steps(self) -> set[str]:
+        """软失败步骤集合（可被子类覆写或运行时调整）"""
+        return self._soft_fail_steps
+
+    @soft_fail_steps.setter
+    def soft_fail_steps(self, value: set[str]) -> None:
+        self._soft_fail_steps = set(value)
 
     async def run(self, ctx: PipelineContext) -> PipelineContext:
         ctx.status = PipelineStatus.RUNNING
@@ -62,14 +92,21 @@ class BaseStoryPipeline(ABC):
                 result = await step.execute(ctx)
                 ctx.add_step_result(result)
 
-                # 三态语义：
-                #   failed  → 短路：停止管线（已完成步骤副作用不回滚）
+                # 三态语义 + 软失败机制：
+                #   failed + 在软失败集合 → 转为 warning，继续管线
+                #   failed + 不在软失败集合 → 短路：停止管线
                 #   skipped → 跳过本步，继续管线
                 #   success → 继续
                 if result.failed:
-                    ctx.status = PipelineStatus.FAILED
-                    logger.error("Pipeline step failed: %s: %s", step.name, result.error)
-                    break
+                    if step.name in self._soft_fail_steps:
+                        logger.warning(
+                            "Pipeline step soft-failed (continuing): %s: %s",
+                            step.name, result.error,
+                        )
+                    else:
+                        ctx.status = PipelineStatus.FAILED
+                        logger.error("Pipeline step failed: %s: %s", step.name, result.error)
+                        break
 
                 if result.skipped:
                     logger.info("Pipeline step skipped: %s: %s", step.name, result.metadata.get("reason", ""))
@@ -77,8 +114,11 @@ class BaseStoryPipeline(ABC):
             except Exception as e:
                 logger.exception("Pipeline step exception: %s", step.name)
                 ctx.add_step_result(StepResult(step_name=step.name, status="failed", error=str(e)))
-                ctx.status = PipelineStatus.FAILED
-                break
+                if step.name in self._soft_fail_steps:
+                    logger.warning("Pipeline step soft-failed (exception, continuing): %s", step.name)
+                else:
+                    ctx.status = PipelineStatus.FAILED
+                    break
 
         if ctx.status == PipelineStatus.RUNNING:
             ctx.status = PipelineStatus.COMPLETED
