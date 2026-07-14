@@ -1,4 +1,5 @@
 import os
+import sys
 from contextlib import asynccontextmanager
 from uuid import uuid4
 
@@ -199,7 +200,16 @@ app.include_router(governance_router)
 app.include_router(checkpoint_router)
 app.include_router(ai_invocation_router)
 
-frontend_dist = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "dist")
-if os.path.isdir(frontend_dist):
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
-    logger.info("Static files mounted from %s", frontend_dist)
+# 前端静态文件目录解析
+# - PyInstaller 冻结模式：exe 同级的 frontend/dist
+# - 开发模式：优先 frontend/dist，回退根目录 dist/
+if getattr(sys, "frozen", False):
+    _frontend_dist = os.path.join(os.path.dirname(sys.executable), "frontend", "dist")
+else:
+    _root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    _frontend_dist = os.path.join(_root, "frontend", "dist")
+    if not os.path.isdir(_frontend_dist):
+        _frontend_dist = os.path.join(_root, "dist")
+if os.path.isdir(_frontend_dist):
+    app.mount("/", StaticFiles(directory=_frontend_dist, html=True), name="frontend")
+    logger.info("Static files mounted from %s", _frontend_dist)
