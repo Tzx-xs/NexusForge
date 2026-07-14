@@ -63,7 +63,8 @@ fn main() {
             // 关闭窗口时 kill 后端
             if let WindowEvent::CloseRequested { .. } = event {
                 let state = window.state::<BackendState>();
-                if let Some(mut child) = state.0.lock().unwrap().take() {
+                let mut guard = state.0.lock().unwrap();
+                if let Some(mut child) = guard.take() {
                     let _ = child.kill();
                 }
             }
