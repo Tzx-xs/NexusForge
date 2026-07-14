@@ -26,6 +26,26 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cache Rust build
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      # ─── 前端依赖 ───
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Install Tauri CLI
+        run: npm install -D @tauri-apps/cli@^2
+
+      - name: Generate app icons
+        run: npx tauri icon app-icon.png
+
       # ─── 后端：安装依赖 + PyInstaller 打包 ───
       - name: Install backend dependencies
         working-directory: backend
@@ -38,66 +58,29 @@ jobs:
         working-directory: backend
         run: pyinstaller --distpath ../out --workpath ../out/build --noconfirm nexusforge-backend.spec
 
-      # ─── 前端：安装依赖 + Vite 构建 ───
-      - name: Install frontend dependencies
-        run: npm install
-
+      # ─── 前端构建 ───
       - name: Build frontend
         run: npm run build
         env:
           VITE_BASE_URL: /
 
-      # ─── 组装便携版包 ───
-      - name: Assemble release package
-        shell: pwsh
-        run: |
-          $pkg = "out/nexusforge-backend"
-          # 把前端 dist 放到后端 exe 同级的 frontend/dist
-          New-Item -ItemType Directory -Force -Path "$pkg/frontend" | Out-Null
-          Copy-Item -Recurse -Force dist "$pkg/frontend/dist"
-          # 启动脚本
-          @'
-          @echo off
-          chcp 65001 >nul
-          cd /d "%~dp0"
-          echo Starting NexusForge...
-          start "" "nexusforge-backend.exe" 8005
-          timeout /t 3 >nul
-          start "" http://127.0.0.1:8005/
-          '@ | Set-Content -Encoding UTF8 "$pkg/start.bat"
-          # 说明文件
-          @'
-          NexusForge 星枢 - Windows 便携版
-          ==================================
-
-          使用方法：
-          1. 双击 start.bat 启动
-          2. 浏览器自动打开 http://127.0.0.1:8005
-          3. 首次使用需在「设置」中配置 LLM API Key
-          4. 关闭命令行窗口或 Ctrl+C 停止
-
-          数据存储在当前目录下 data/ 文件夹。
-          '@ | Set-Content -Encoding UTF8 "$pkg/README.txt"
-          Write-Host "Package assembled at $pkg"
+      # ─── Tauri 打包 NSIS 安装包 ───
+      - name: Build Tauri NSIS installer
+        run: npx tauri build --bundles nsis
 
       # ─── 上传 Artifact ───
-      - name: Upload artifact
+      - name: Upload NSIS installer
         uses: actions/upload-artifact@v4
         with:
-          name: NexusForge-windows-portable
-          path: out/nexusforge-backend/
+          name: NexusForge-windows-installer
+          path: src-tauri/target/release/bundle/nsis/*.exe
           if-no-files-found: error
 
       # ─── 打 tag 时创建 Release ───
-      - name: Zip release package
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
-        run: Compress-Archive -Path out/nexusforge-backend/* -DestinationPath out/NexusForge-windows-portable.zip
-
       - name: Create Release on tag
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: out/NexusForge-windows-portable.zip
+          files: src-tauri/target/release/bundle/nsis/*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
