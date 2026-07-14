@@ -1,5 +1,0 @@
-export { default as XyDrawer } from './XyDrawer.vue'
-export { default as XyDialog } from './XyDialog.vue'
-export { default as XyBottomSheet } from './XyBottomSheet.vue'
-export { default as ThemeSwitcher } from './ThemeSwitcher.vue'
-export { default as ThemeToggle } from './ThemeToggle.vue'
